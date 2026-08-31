@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON NEXUS - Gestor de Actividades</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #08090f;
+            --card-bg: rgba(18, 22, 36, 0.75);
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-green: #00ff66;
+            --neon-purple: #9d00ff;
+            --text-main: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(157, 0, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(0, 243, 255, 0.15) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            width: 260px;
+            background: rgba(10, 12, 20, 0.85);
+            border-right: 1px solid rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(12px);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
+            letter-spacing: 2px;
+        }
+
+        .stats-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 0, 127, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.1);
+        }
+
+        .stats-card h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #8a99ad;
+            margin-bottom: 0.5rem;
+        }
+
+        .xp-bar {
+            width: 100%;
+            height: 8px;
+            background: #1a1d2d;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .xp-progress {
+            width: 65%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple));
+            box-shadow: 0 0 8px var(--neon-pink);
+        }
+
+        /* Main Workspace */
+        main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            overflow-y: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-input-container {
+            display: flex;
+            gap: 1rem;
+            background: var(--card-bg);
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        input, select, button {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input[type="text"] {
+            flex: 1;
+        }
+
+        select option {
+            background: #0d0f17;
+            color: #fff;
+        }
+
+        .btn-add {
+            background: var(--neon-cyan);
+            color: #000;
+            font-weight: 700;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        /* Matrix Grid Layout */
+        .nexus-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        .quadrant {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .quadrant::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .q-critical::before { background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
+        .q-focus::before { background: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
+        .q-flow::before { background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
+        .q-low::before { background: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
+
+        .quadrant h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .task-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .task-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateX(4px);
+        }
+
+        .task-card.completed {
+            opacity: 0.4;
+            text-decoration: line-through;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .btn-action:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="logo">⚡ NEXUS PRO</div>
+        
+        <div class="stats-card">
+            <h4>Nivel de Enfoque</h4>
+            <h2 style="color: var(--neon-pink); font-family: Orbitron;">NIVEL 4</h2>
+            <div class="xp-bar">
+                <div class="xp-progress"></div>
+            </div>
+            <p style="font-size: 0.8rem; margin-top: 0.5rem; color: #64748b;">350 / 500 XP para el siguiente rango</p>
+        </div>
+
+        <div class="stats-card" style="border-color: rgba(0, 243, 255, 0.3);">
+            <h4>Rendimiento Hoy</h4>
+            <h3 style="color: var(--neon-cyan);">85% Eficiencia</h3>
+        </div>
+    </aside>
+
+    <main>
+        <header>
+            <h1 style="font-family: Orbitron; letter-spacing: 1px;">Tablero de Impacto</h1>
+        </header>
+
+        <div class="task-input-container">
+            <input type="text" id="taskText" placeholder="Escribe un nuevo objetivo o actividad...">
+            <select id="taskZone">
+                <option value="critical">Crítico (Alto Impacto)</option>
+                <option value="focus">Enfoque (Largo Plazo)</option>
+                <option value="flow">Flujo (Tareas Rápidas)</option>
+                <option value="low">Baja Prioridad</option>
+            </select>
+            <button class="btn-add" onclick="addTask()">+ Añadir</button>
+        </div>
+
+        <div class="nexus-grid">
+            <div class="quadrant q-critical">
+                <h3 style="color: var(--neon-pink);">
+                    🔥 Urgente & Crítico 
+                    <span id="count-critical" style="font-size: 0.8rem;">0</span>
+                </h3>
+                <div class="task-list" id="list-critical"></div>
+            </div>
+
+            <div class="quadrant q-focus">
+                <h3 style="color: var(--neon-cyan);">
+                    🎯 Enfoque Estratégico 
+                    <span id="count-focus" style="font-size: 0.8rem;">0</span>
+                </h3>
+                <div class="task-list" id="list-focus"></div>
+            </div>
+
+            <div class="quadrant q-flow">
+                <h3 style="color: var(--neon-green);">
+                    ⚡ Flujo / Micro-tareas 
+                    <span id="count-flow" style="font-size: 0.8rem;">0</span>
+                </h3>
+                <div class="task-list" id="list-flow"></div>
+            </div>
+
+            <div class="quadrant q-low">
+                <h3 style="color: var(--neon-purple);">
+                    📥 Mantenimiento / Rutina 
+                    <span id="count-low" style="font-size: 0.8rem;">0</span>
+                </h3>
+                <div class="task-list" id="list-low"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function addTask() {
+            const input = document.getElementById('taskText');
+            const zone = document.getElementById('taskZone').value;
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            const targetList = document.getElementById(`list-${zone}`);
+            const taskCard = document.createElement('div');
+            taskCard.className = 'task-card';
+
+            taskCard.innerHTML = `
+                <span>${text}</span>
+                <div class="task-actions">
+                    <span class="btn-action" onclick="toggleComplete(this)">✅</span>
+                    <span class="btn-action" onclick="deleteTask(this)">🗑️</span>
+                </div>
+            `;
+
+            targetList.appendChild(taskCard);
+            input.value = '';
+            updateCounters();
+        }
+
+        function toggleComplete(element) {
+            const card = element.closest('.task-card');
+            card.classList.toggle('completed');
+        }
+
+        function deleteTask(element) {
+            const card = element.closest('.task-card');
+            card.remove();
+            updateCounters();
+        }
+
+        function updateCounters() {
+            ['critical', 'focus', 'flow', 'low'].forEach(zone => {
+                const count = document.getElementById(`list-${zone}`).children.length;
+                document.getElementById(`count-${zone}`).innerText = count;
+            });
+        }
+    </script>
+</body>
+</html>
